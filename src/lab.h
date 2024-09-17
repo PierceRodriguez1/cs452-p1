@@ -1,4 +1,3 @@
-/**Update this file with the starter code**/
 #ifndef LAB_H
 #define LAB_H
 #include <stdlib.h>
