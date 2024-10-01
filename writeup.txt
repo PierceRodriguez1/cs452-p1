@@ -18,7 +18,8 @@ Design ideas for each task
             as well as a launch_process() function. they both use the tcgetprgrp system call as recommended in the
             project. 
     task 9: not completed
-    task 10: not completed 
+    task 10: i used the waitpid() like recommended in the email in my launch_process() function to check if background
+             functions have completed wihtout blocking the shell.
 
 i asked chatGPT about tcgetpgrp and tcsetpgrp
 

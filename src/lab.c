@@ -143,5 +143,4 @@ void sh_destroy(struct shell *sh) {
 void parse_args(int argc, char **argv) {
     UNUSED(argc);
     UNUSED(argv);
-    // Implement command-line argument parsing here if needed
 }
