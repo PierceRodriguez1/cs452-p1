@@ -1,0 +1,96 @@
+Design ideas for each task 
+    task 3: this was the easiest task to implement just using switch case statement to complete this task    
+            and the LAB_VERSION_MAJOR and LAB_VERSION_MINOR.
+    task 4: this task i just implemented the code given in the task in my code and added the includes to
+            my header files.
+    task 5: this task i implemented the custom prompt where the custom prompt can be set but it also
+            checks the environment variables to see if a custome prompt is set and if it is not set the
+            $ sign is used
+    task 6: this task was handled in the do_builtin() function where if exit was typed the simple shell would
+            exit and free the shell. and if the CD command was used and there is a directory to go into it enters that
+            directory if not it stays in the current directory and if an invalid directory is used it prints an 
+            error message.
+    task 7: in the cmd_parse() function i used sysconf the get the max args like the task suggested then each
+            line is parsed with the rest of that function. the function handles not worrying about the spaces as 
+            the task says and each is parsed individually. this also handles if nothing was typed and enter was pressed 
+            the shell displays another empty command. 
+    task 8: I handled the signlas just like task 8 recommended in my main.c with an initilize_shell() functions 
+            as well as a launch_process() function. they both use the tcgetprgrp system call as recommended in the
+            project. 
+    task 9: not completed
+    task 10: not completed 
+
+i asked chatGPT about tcgetpgrp and tcsetpgrp
+
+ this was my prompt to chatGPT:
+    what is tcgetpgrp and tcsetpgrp system calls in C?
+
+this was the response it gave.
+
+    In C, tcgetpgrp and tcsetpgrp are system calls that are used to get and set the foreground process group ID of a terminal. These functions are typically used in the context of terminal control, particularly in Unix-like operating systems, and they are defined in the <termios.h> header.
+
+1. tcgetpgrp(int fd)
+Purpose: This system call retrieves the process group ID of the foreground process group associated with the terminal referred to by the file descriptor fd.
+
+Parameters:
+
+fd: A file descriptor referring to an open terminal (often obtained from open(), dup(), or similar functions).
+Returns:
+
+On success, it returns the process group ID of the foreground process group.
+On failure, it returns -1 and sets errno to indicate the error.
+Example:
+
+c
+Copy code
+#include <stdio.h>
+#include <unistd.h>
+#include <termios.h>
+
+int main() {
+    int fd = 0; // File descriptor for standard input (stdin)
+    pid_t pgid = tcgetpgrp(fd);
+    if (pgid == -1) {
+        perror("tcgetpgrp");
+    } else {
+        printf("Foreground process group ID: %d\n", pgid);
+    }
+    return 0;
+}
+2. tcsetpgrp(int fd, pid_t pgrpid)
+Purpose: This system call sets the foreground process group ID of the terminal referred to by the file descriptor fd to pgrpid.
+
+Parameters:
+
+fd: A file descriptor referring to an open terminal.
+pgrpid: The process group ID to be set as the foreground process group.
+Returns:
+
+On success, it returns 0.
+On failure, it returns -1 and sets errno to indicate the error.
+Example:
+
+c
+Copy code
+#include <stdio.h>
+#include <unistd.h>
+#include <termios.h>
+
+int main() {
+    int fd = 0; // File descriptor for standard input (stdin)
+    pid_t pgid = getpgrp(); // Get current process group ID
+    
+    // Set the process group as the foreground process group for the terminal
+    if (tcsetpgrp(fd, pgid) == -1) {
+        perror("tcsetpgrp");
+    } else {
+        printf("Foreground process group ID set to: %d\n", pgid);
+    }
+    return 0;
+}
+Use Cases:
+These system calls are commonly used in shell programs and terminal emulators to control which process group is interacting with the terminal. This ensures that signals like SIGINT (from pressing Ctrl+C) are sent only to the foreground process group.
+Errors:
+EINVAL: If pgrpid is not a valid process group ID.
+ENOTTY: If the file descriptor fd is not associated with a terminal.
+EPERM: If the calling process does not have permission to set the process group ID.
