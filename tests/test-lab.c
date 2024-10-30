@@ -1,83 +1,67 @@
 #include "harness/unity.h"
 #include "../src/lab.h"
+#include <stdlib.h>
 
-// NOTE: Due to the multi-threaded nature of this project. Unit testing for this
-// project is limited. I have provided you with a command line tester in
-// the file app/main.cp. Be aware that the examples below do not test the
-// multi-threaded nature of the queue. You will need to use the command line
-// tester to test the multi-threaded nature of your queue. Passing these tests
-// does not mean your queue is correct. It just means that it can add and remove
-// elements from the queue below the blocking threshold.
 
+static int defaultRange = 10;
+static int defaultSize = 103;
+static int defaultSeed = 1;
+static int *expected = NULL;
+static int *actual = NULL;
 
 void setUp(void) {
-  // set stuff up here
+  actual = malloc(sizeof(int) *defaultSize);
+  expected = malloc(sizeof(int) *defaultSize);
+  srandom(defaultSeed);
+  for (int i = 0; i < defaultSize; i++){
+    int value = random() % defaultRange;
+    actual[i]= value;
+    expected[i] =value;
+  }
 }
 
 void tearDown(void) {
-  // clean stuff up here
+  free(actual);
+  free(expected);
 }
 
-
-
-
-void test_create_destroy(void)
+int compare_ints(const void* a, const void* b)
 {
-    queue_t q = queue_init(10);
-    TEST_ASSERT_TRUE(q != NULL);
-    queue_destroy(q);
+    int arg1 = *(const int*)a;
+    int arg2 = *(const int*)b;
+
+    if (arg1 < arg2) return -1;
+    if (arg1 > arg2) return 1;
+    return 0;
+ }
+
+void test_mergesort_mt_small_one_thread(void)
+{
+  //Run our sort and the C library qsort to compare to
+  mergesort_mt(actual, defaultSize, 1);
+  qsort(expected, defaultSize, sizeof(int), compare_ints);
+  TEST_ASSERT_EQUAL_INT32_ARRAY(expected, actual, defaultSize);
 }
 
-void test_queue_dequeue(void)
+void test_mergesort_mt_small_two_threads(void)
 {
-    queue_t q = queue_init(10);
-    TEST_ASSERT_TRUE(q != NULL);
-    int data = 1;
-    enqueue(q, &data);
-    TEST_ASSERT_TRUE(dequeue(q) == &data);
-    queue_destroy(q);
+  mergesort_mt(actual, defaultSize, 2);
+  qsort(expected, defaultSize, sizeof(int), compare_ints);
+  TEST_ASSERT_EQUAL_INT32_ARRAY(expected, actual, defaultSize);
 }
 
-void test_queue_dequeue_multiple(void)
+void test_mergesort_mt_small_three_threads(void)
 {
-    queue_t q = queue_init(10);
-    TEST_ASSERT_TRUE(q != NULL);
-    int data = 1;
-    int data2 = 2;
-    int data3 = 3;
-    enqueue(q, &data);
-    enqueue(q, &data2);
-    enqueue(q, &data3);
-    TEST_ASSERT_TRUE(dequeue(q) == &data);
-    TEST_ASSERT_TRUE(dequeue(q) == &data2);
-    TEST_ASSERT_TRUE(dequeue(q) == &data3);
-    queue_destroy(q);
+  mergesort_mt(actual, defaultSize, 3);
+  qsort(expected, defaultSize, sizeof(int), compare_ints);
+  TEST_ASSERT_EQUAL_INT32_ARRAY(expected, actual, defaultSize);
 }
 
-void test_queue_dequeue_shutdown(void)
-{
-    queue_t q = queue_init(10);
-    TEST_ASSERT_TRUE(q != NULL);
-    int data = 1;
-    int data2 = 2;
-    int data3 = 3;
-    enqueue(q, &data);
-    enqueue(q, &data2);
-    enqueue(q, &data3);
-    TEST_ASSERT_TRUE(dequeue(q) == &data);
-    TEST_ASSERT_TRUE(dequeue(q) == &data2);
-    queue_shutdown(q);
-    TEST_ASSERT_TRUE(dequeue(q) == &data3);
-    TEST_ASSERT_TRUE(is_shutdown(q));
-    TEST_ASSERT_TRUE(is_empty(q));
-    queue_destroy(q);
-}
 
 int main(void) {
   UNITY_BEGIN();
-  RUN_TEST(test_create_destroy);
-  RUN_TEST(test_queue_dequeue);
-  RUN_TEST(test_queue_dequeue_multiple);
-  RUN_TEST(test_queue_dequeue_shutdown);
+  RUN_TEST(test_mergesort_mt_small_one_thread);
+  RUN_TEST(test_mergesort_mt_small_two_threads);
+  RUN_TEST(test_mergesort_mt_small_three_threads);
   return UNITY_END();
 }

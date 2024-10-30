@@ -1,92 +1,157 @@
-/**Update this file with the starter code**/
+#include <stdlib.h>
+#include <sys/time.h> /* for gettimeofday system call */
 #include "lab.h"
-#include <pthread.h>
+#include <stdio.h>
 
-struct queue {
-    void **buffer;
-    int capacity;
-    int size;
-    int front;
-    int rear;
-    pthread_mutex_t mutex;
-    pthread_cond_t not_full;
-    pthread_cond_t not_empty;
-    bool is_shutdown;
-};
-
-queue_t queue_init(int capacity) {
-    queue_t q = (queue_t)malloc(sizeof(struct queue));
-    q->buffer = (void **)malloc(capacity * sizeof(void *));
-    q->capacity = capacity;
-    q->size = 0;
-    q->front = 0;
-    q->rear = -1;
-    q->is_shutdown = false;
-    pthread_mutex_init(&q->mutex, NULL);
-    pthread_cond_init(&q->not_full, NULL);
-    pthread_cond_init(&q->not_empty, NULL);
-    return q;
-}
-
-void queue_destroy(queue_t q) {
-    pthread_mutex_destroy(&q->mutex);
-    pthread_cond_destroy(&q->not_full);
-    pthread_cond_destroy(&q->not_empty);
-    free(q->buffer);
-    free(q);
-}
-
-void enqueue(queue_t q, void *data) {
-    pthread_mutex_lock(&q->mutex);
-    while (q->size == q->capacity && !q->is_shutdown) {
-        pthread_cond_wait(&q->not_full, &q->mutex);
+/* Standard insertion sort */
+static void insertion_sort(int A[], int p, int r)
+{
+    int j;
+    for (j = p + 1; j <= r; j++)
+    {
+        int key = A[j];
+        int i = j - 1;
+        while ((i >= p) && (A[i] > key))
+        {
+            A[i + 1] = A[i];
+            i--;
+        }
+        A[i + 1] = key;
     }
-    if (q->is_shutdown) {
-        pthread_mutex_unlock(&q->mutex);
-        return;
+}
+
+void mergesort_s(int A[], int p, int r)
+{
+    if (r - p + 1 <= INSERTION_SORT_THRESHOLD)
+    {
+        insertion_sort(A, p, r);
     }
-    q->rear = (q->rear + 1) % q->capacity;
-    q->buffer[q->rear] = data;
-    q->size++;
-    pthread_cond_signal(&q->not_empty);
-    pthread_mutex_unlock(&q->mutex);
-}
-
-void *dequeue(queue_t q) {
-    pthread_mutex_lock(&q->mutex);
-    while (q->size == 0 && !q->is_shutdown) {
-        pthread_cond_wait(&q->not_empty, &q->mutex);
+    else
+    {
+        int q = (p + r) / 2;
+        mergesort_s(A, p, q);
+        mergesort_s(A, q + 1, r);
+        int *B = (int *)malloc(sizeof(int) * (r - p + 1));
+        merge_s(A, p, q, r);
+        free(B);
     }
-    if (q->size == 0) {
-        pthread_mutex_unlock(&q->mutex);
-        return NULL;
+}
+
+void merge_s(int A[], int p, int q, int r)
+{
+  int *B = (int *)malloc(sizeof(int) * (r - p + 1));
+
+  int i = p;
+  int j = q + 1;
+  int k = 0;
+  int l;
+
+  /* as long as both lists have unexamined elements */
+  while ((i <= q) && (j <= r))
+    {
+      if (A[i] < A[j])
+        {
+          B[k] = A[i];
+          i++;
+        }
+      else
+        {
+          B[k] = A[j];
+          j++;
+        }
+      k++;
     }
-    void *data = q->buffer[q->front];
-    q->front = (q->front + 1) % q->capacity;
-    q->size--;
-    pthread_cond_signal(&q->not_full);
-    pthread_mutex_unlock(&q->mutex);
-    return data;
+
+  /* copy remaining elements from the first list */
+  while (i <= q)
+    B[k++] = A[i++];
+
+  /* copy remaining elements from the second list */
+  while (j <= r)
+    B[k++] = A[j++];
+
+  /* copy merged output from array B back to array A */
+  for (l = p, k = 0; l <= r; l++, k++)
+    A[l] = B[k];
+
+  free(B);
 }
 
-void queue_shutdown(queue_t q) {
-    pthread_mutex_lock(&q->mutex);
-    q->is_shutdown = true;
-    pthread_cond_broadcast(&q->not_empty);
-    pthread_cond_broadcast(&q->not_full);
-    pthread_mutex_unlock(&q->mutex);
+void mergesort_mt(int *A, int n, int num_thread) {
+    struct parallel_args *args = malloc(sizeof(struct parallel_args) * num_thread);
+    int chunk_size = n / num_thread;
+    int i;
+
+    // Divide the array into chunks and assign each to a thread
+    for (i = 0; i < num_thread; i++) {
+        args[i].A = A;
+        args[i].start = i * chunk_size;
+        args[i].end = (i + 1) * chunk_size - 1;
+        if (i == num_thread - 1) {
+            args[i].end = n - 1; // Ensure last thread processes to the end
+        }
+        pthread_create(&args[i].tid, NULL, parallel_mergesort, &args[i]);
+    }
+    
+    // Join all threads after they have completed sorting their sections
+    for (i = 0; i < num_thread; i++) {
+        pthread_join(args[i].tid, NULL);
+    }
+    
+    // Perform merging in stages
+    int step = chunk_size;
+    while (step < n) {
+        for (i = 0; i + step < n; i += 2 * step) {
+            int end = (i + 2 * step - 1 < n) ? i + 2 * step - 1 : n - 1;
+            merge_s(A, i, i + step - 1, end);
+        }
+        step *= 2;
+    }
+
+    free(args);
 }
 
-bool is_empty(queue_t q) {
-    pthread_mutex_lock(&q->mutex);
-    bool empty = (q->size == 0);
-    pthread_mutex_unlock(&q->mutex);
-    return empty;
+double getMilliSeconds()
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    return (double)now.tv_sec * 1000.0 + now.tv_usec / 1000.0;
 }
 
-bool is_shutdown(queue_t q) {
-    pthread_mutex_lock(&q->mutex);
-    bool shutdown = q->is_shutdown;
-    pthread_mutex_unlock(&q->mutex);
-    return shutdown;
+void *parallel_mergesort(void *args)
+{
+    struct parallel_args *pargs = (struct parallel_args *)args;
+    mergesort_s(pargs->A, pargs->start, pargs->end);
+    return NULL;
+}
+
+int myMain(int argc, char **argv)
+{
+    if (argc < 3)
+    {
+        printf("usage: %s <array_size> <num_threads>\n", argv[0]);
+        return 1;
+    }
+    int size = atoi(argv[1]);
+    int t = atoi(argv[2]);
+
+    int *A_ = malloc(sizeof(int) * size);
+    if (A_ == NULL)
+    {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    }
+
+    srandom(1);
+    for (int i = 0; i < size; i++)
+        A_[i] = random() % 100000;
+
+    double start = getMilliSeconds();
+    mergesort_mt(A_, size, t);
+    double end = getMilliSeconds();
+
+    printf("Time: %f ms, Threads: %d\n", end - start, t);
+
+    free(A_);
+    return 0;
 }
