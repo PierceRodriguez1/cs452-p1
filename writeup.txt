@@ -1,49 +1,41 @@
 CSC 452/552 Operations Systems
-Project 2 The Classic Bounded Buffer Problem
-Name:Pierce Rodriguez
+Project 3 Threads
+Name: Pierce Rodriguez
 Bronco ID: 114203816
-Date: 22 October 2024
+Date: 11/12/2024
 
 1.	Project Overview
-a)	In this project you will implement a FIFO queue as a monitor that can be used to solve the bounded buffer problem.
-Your queue will have a fixed capacity and will block calling threads when it is full or empty. Bounded buffers are extremely 
-common in Operating Systems. When you write code in Java, Python, C#, etc. it may seem like you have infinite memory. However,
- infinite memory is just an abstraction that the OS provides, in reality you are limited by the physical hardware the OS is running on.
-  This data structure could be used to build higher level abstractions like a thread pool.
-
+	a)	In this project, I enhanced an existing implementation of the merge sort 
+	algorithm by adapting it to operate in a multi-threaded environment. This involved 
+	wrapping the algorithm to ensure thread safety and using synchronization primitives 
+	to manage concurrent access. I also developed and utilized shell scripts and system 
+	tools to monitor and analyze the behavior of the processes and threads during execution. 
+	This project required applying core computer science theory and software development 
+	practices to construct a robust solution that leverages parallel computation, addressing 
+	complex issues related to multi-threaded interactions with shared data buffers.
 2.	Project Management Plan
-a)	Task 1: Setup
-b)	Task 2: Prepare your repository 
-c)	Task 3: implement the header file
-d)	Task 4: Submit your code
+	a)	Task 3: I implemented the mersort_mt to split the array into equal chunks and then 
+				handed each chunk to a new thread. After that I used pthread_join to wait for 
+				all chunks to be sorted then merging the results together.
+	b)	Task 4: I ran the program with an array size of 1000 and different number of threads. 
+	i cant get the image to paste in here so when i ran 1000 2 i got .259033
+	and when i ran 1000 3 i got .310059
+	c)	Task 5: created a script using the gnuplot macro to generate a plot to show the 
+				speedup when using multiple threads,
+	d)	Task 6: this is done in Analysis.md
 3.	Project Deliveries
-a)	How to compile and use my code?
-i.	Use commands in this order
-	Make
-	./myprogram
-b)	Any self-modification?
-	-c: number of consumer threads
-	-p number of producer threads
-    -I number of items per producer
-	-s Queue size
-	-d enable random delays
-c)	Summary of Results.
-i.	tests/test-lab.c:78:test_create_destroy:PASS
-tests/test-lab.c:79:test_queue_dequeue:PASS
-tests/test-lab.c:80:test_queue_dequeue_multiple:PASS
-tests/test-lab.c:81:test_queue_dequeue_shutdown:PASS
-
------------------------
-4 Tests 0 Failures 0 Ignored 
-OK
-4.	Self-Reflection of Project 2
-This project really showed the importance of careful synchronization in multi-threaded programs. 
-In the beginning I was getting inconsistent results because threads were not being properly synchronized. 
-That helped me understand that without meticulous synchronization a program can given random results as
- threads access shared resources. Additionally, I learned the significance of proper resource cleanup and shutdown. 
- Resource leaks from incomplete shutdowns caused issues that reinforced the need for careful management of memory, 
- file handles, and thread pools. I also gained practical insight into the monitor concept, where implementing monitors 
- for thread synchronization helped me better grasp mutual exclusion and critical section management. These experiences 
- collectively deepened my understanding of multi-threaded programming and the importance of robust resource management 
- and synchronization techniques.
-
+	a)	How to compile and use my code
+		i.	usage: ./myprogram <array_size> <num_threads>
+b)	Summary of Results.
+	i.	These are done in my analysis.md file
+4.	Self-Reflection of Project
+	a)	This project was great for learning more about threads and the effect of multiple numbers 
+	of threads and how to handle threading. , I tackled modifying the mergesort_mt function to 
+	handle array chunking and thread management with pthread in C. This required an understanding
+	 of how to split work between threads, join them effectively, and merge results without shared 
+	 resource conflicts. Debugging and fine-tuning were essential, especially in ensuring that each
+	  thread correctly sorted its segment and that the main program managed memory efficiently. , I 
+	  learned that threading provides significant performance benefits up to a certain point, after which 
+	  additional threads can cause diminishing returns or slowdowns due to context-switching overhead. 
+	  Through testing and analysis, I observed optimal performance when my number of threads was less than 5, 
+	  after which the benefits of parallelism outweighed the management costs.
