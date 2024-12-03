@@ -1,41 +1,57 @@
 CSC 452/552 Operations Systems
-Project 3 Threads
+Project 4 Buddy Allocator 
 Name: Pierce Rodriguez
 Bronco ID: 114203816
-Date: 11/12/2024
+Date: December 3, 2024
 
 1.	Project Overview
-	a)	In this project, I enhanced an existing implementation of the merge sort 
-	algorithm by adapting it to operate in a multi-threaded environment. This involved 
-	wrapping the algorithm to ensure thread safety and using synchronization primitives 
-	to manage concurrent access. I also developed and utilized shell scripts and system 
-	tools to monitor and analyze the behavior of the processes and threads during execution. 
-	This project required applying core computer science theory and software development 
-	practices to construct a robust solution that leverages parallel computation, addressing 
-	complex issues related to multi-threaded interactions with shared data buffers.
+a)	The goal of this project was to implement a memory manager using the buddy allocation algorithm, as 
+described by Dr. Donald Knuth in The Art of Computer Programming, Volume 1: Fundamental Algorithms. The 
+project utilized the mmap() system call to allocate a large block of memory, which was then managed exclusively 
+by custom memory management functions designed as part of the implementation. This project provided hands-on 
+experience in managing low-level memory within user space and interacting with the system call interface. 
+By implementing and testing the buddy algorithm, the project explored efficient memory allocation techniques 
+and evaluated the algorithm's suitability for various scenarios.
+
 2.	Project Management Plan
-	a)	Task 3: I implemented the mersort_mt to split the array into equal chunks and then 
-				handed each chunk to a new thread. After that I used pthread_join to wait for 
-				all chunks to be sorted then merging the results together.
-	b)	Task 4: I ran the program with an array size of 1000 and different number of threads. 
-	i cant get the image to paste in here so when i ran 1000 2 i got .259033
-	and when i ran 1000 3 i got .310059
-	c)	Task 5: created a script using the gnuplot macro to generate a plot to show the 
-				speedup when using multiple threads,
-	d)	Task 6: this is done in Analysis.md
+a)	Task 1: This was just preparing the repository with the code that was provided.
+b)	Task 2: Implementing the lab.h that was provided for the project. 
+c)	Task 3: Created my own unit tests to add enough tests beyond what was given. 
 3.	Project Deliveries
-	a)	How to compile and use my code
-		i.	usage: ./myprogram <array_size> <num_threads>
+a)	How to compile and use my code?
+Make
+./test-lab
 b)	Summary of Results.
-	i.	These are done in my analysis.md file
+->Testing buddy init
+tests/test-lab.c:306:test_buddy_init:PASS
+->Test allocating and freeing 1 byte
+tests/test-lab.c:307:test_buddy_malloc_one_byte:PASS
+->Testing size that will consume entire memory pool
+tests/test-lab.c:308:test_buddy_malloc_one_large:PASS
+->Testing null and invalid inputs
+tests/test-lab.c:311:test_buddy_null_inputs:PASS
+->Testing size boundary conditions
+tests/test-lab.c:312:test_buddy_size_boundaries:PASS
+->Testing realloc comprehensively
+tests/test-lab.c:313:test_buddy_realloc_comprehensive:PASS
+->Testing memory fragmentation scenarios
+tests/test-lab.c:314:test_buddy_fragmentation:PASS
+->Testing buddy calculation functionality
+tests/test-lab.c:315:test_buddy_calc_functionality:PASS
+
+-----------------------
+8 T ests 0 Failures 0 Ignored 
+OK
 4.	Self-Reflection of Project
-	a)	This project was great for learning more about threads and the effect of multiple numbers 
-	of threads and how to handle threading. , I tackled modifying the mergesort_mt function to 
-	handle array chunking and thread management with pthread in C. This required an understanding
-	 of how to split work between threads, join them effectively, and merge results without shared 
-	 resource conflicts. Debugging and fine-tuning were essential, especially in ensuring that each
-	  thread correctly sorted its segment and that the main program managed memory efficiently. , I 
-	  learned that threading provides significant performance benefits up to a certain point, after which 
-	  additional threads can cause diminishing returns or slowdowns due to context-switching overhead. 
-	  Through testing and analysis, I observed optimal performance when my number of threads was less than 5, 
-	  after which the benefits of parallelism outweighed the management costs.
+This project provided a good opportunity to dive into the complexities of implementing a buddy memory allocation 
+system. Through the development process, I enhanced my understanding of dynamic memory management, bitwise 
+operations, and system-level programming. Writing functions like buddy_malloc, buddy_free, and buddy_realloc 
+required a detailed understanding of memory alignment and the importance of efficient data structures to manage 
+memory blocks. Moreover, testing and debugging these functions allowed me to improve my ability to identify edge cases 
+and handle errors better, such as ensuring proper block alignment and managing corner cases like null pointers 
+and size zero requests.
+
+One area where I encountered difficulty was in the implementation of the buddy_free function. Specifically,
+ merging memory blocks with their "buddies" required careful management of pointers and understanding how blocks 
+ are aligned in memory. Debugging issues with memory corruption in these scenarios was challenging but definitely 
+ improved my problem-solving skills. 
